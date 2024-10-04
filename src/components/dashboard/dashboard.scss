@@ -1,0 +1,52 @@
+// Variables para reutilización (si lo necesitas)
+$primary-color: #46707e;
+$hover-color: #3b5c6b;
+$background-color: #f4f6f8;
+$font-family: 'Roboto', sans-serif;
+
+// Estilos generales del dashboard
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: $font-family;
+  background-color: $background-color;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background-color: $primary-color;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: $hover-color;
+  }
+}
+
+// Responsiveness
+@media screen and (max-width: 768px) {
+  button {
+    width: 80%;
+    margin-bottom: 20px;
+  }
+}
+
+@media screen and (min-width: 769px) {
+  button {
+    width: 30%;
+    margin: 10px;
+  }
+}
