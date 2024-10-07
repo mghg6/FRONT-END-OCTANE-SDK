@@ -93,7 +93,7 @@ const extraInfo = async (epc: string, antena: string) => {
             const prodEtiquetaRFIDId = epcData.id;
             console.log(prodEtiquetaRFIDId);
             
-            const response = await fetch('http://172.16.10.31/api/ProdExtraInfo', {
+            const response = await fetch('http://172.16.10.31/api/ProdExtraInfo/EntradaAlmacen', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -102,7 +102,6 @@ const extraInfo = async (epc: string, antena: string) => {
                     prodEtiquetaRFIDId: prodEtiquetaRFIDId,
                     ubicacion: "AlmacenPT",
                     fechaEntrada: new Date().toISOString(),
-                    fechaSalida: "",
                     antena: antena
                 })
             });
