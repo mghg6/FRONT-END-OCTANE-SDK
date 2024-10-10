@@ -16,7 +16,7 @@ interface Producto {
     pesoTarima: string | number;
     piezas: string | number;
     uom: string;
-    fechaEntrada: string;
+    fechaSalida: string; // Cambiado para Salida
     productPrintCard: string;
 }
 
@@ -40,34 +40,27 @@ const fetchData = async (epc: string): Promise<Producto | null> => {
 
 // Cargar datos
 const loadData = async (epc: string, setProductos: React.Dispatch<React.SetStateAction<Producto[]>>) => {
-    try {
-        const data = await fetchData(epc);
-        if (data) {
-            setProductos((prev) => [
-                {
-                    urlImagen: data.urlImagen || 'https://www.jnfac.or.kr/img/noimage.jpg',
-                    fecha: data.fecha || 'N/A',
-                    area: data.area || 'N/A',
-                    claveProducto: data.claveProducto || 'N/A',
-                    nombreProducto: data.nombreProducto || 'N/A',
-                    pesoBruto: data.pesoBruto || 'N/A',
-                    pesoNeto: data.pesoNeto || 'N/A',
-                    pesoTarima: data.pesoTarima || 'N/A',
-                    piezas: data.piezas || 'N/A',
-                    uom: data.uom || 'N/A',
-                    fechaEntrada: data.fechaEntrada || 'N/A',
-                    productPrintCard: data.productPrintCard || 'N/A'
-                },
-                ...prev
-            ]);
-        } else {
-            console.warn(`No se encontraron datos para el EPC: ${epc}`);
-        }
-    } catch (error) {
-        console.error("Error al cargar los datos del EPC:", error);
+    const data = await fetchData(epc);
+    if (data) {
+        setProductos((prev) => [
+            {
+                urlImagen: data.urlImagen || 'https://www.jnfac.or.kr/img/noimage.jpg',
+                fecha: data.fecha || 'N/A',
+                area: data.area || 'N/A',
+                claveProducto: data.claveProducto || 'N/A',
+                nombreProducto: data.nombreProducto || 'N/A',
+                pesoBruto: data.pesoBruto || 'N/A',
+                pesoNeto: data.pesoNeto || 'N/A',
+                pesoTarima: data.pesoTarima || 'N/A',
+                piezas: data.piezas || 'N/A',
+                uom: data.uom || 'N/A',
+                fechaSalida: data.fechaSalida || 'N/A', // Cambiado para Salida
+                productPrintCard: data.productPrintCard || 'N/A'
+            },
+            ...prev
+        ]);
     }
 };
-
 
 // Función para cambiar el estado
 const updateStatus = async (epc: string, status: number) => {
@@ -91,39 +84,34 @@ const updateStatus = async (epc: string, status: number) => {
     }
 };
 
-// Función para hacer registro de entradas en ExtraInfo
+// Función para hacer registro de salidas en ExtraInfo
 const extraInfo = async (epc: string, antena: string) => {
     try {
         const epcData = await fetchData(epc);
 
         if (epcData && epcData.id) {
             const prodEtiquetaRFIDId = epcData.id;
-            console.log("ID del producto para EPC:", prodEtiquetaRFIDId);
+            console.log(prodEtiquetaRFIDId);
             
-            const bodyData = {
-                prodEtiquetaRFIDId: prodEtiquetaRFIDId,
-                ubicacion: "AlmacenPT",
-                fechaEntrada: new Date().toISOString(),
-                antena: antena
-            };
-
-            console.log("Datos enviados en el POST:", bodyData);
-
-            const response = await fetch('http://172.16.10.31/api/ProdExtraInfo/EntradaAlmacen', {
+            // Cambiado a endpoint de SalidaAlmacen
+            const response = await fetch('http://172.16.10.31/api/ProdExtraInfo/SalidaAlmacen', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(bodyData)
+                body: JSON.stringify({
+                    prodEtiquetaRFIDId: prodEtiquetaRFIDId,
+                    ubicacion: "AlmacenMP", // Ajuste para Salida
+                    fechaSalida: new Date().toISOString(),
+                    antena: antena
+                })
             });
 
             if (response.ok) {
                 const result = await response.json();
-                console.log("Respuesta del servidor:", result);
                 return result;
             } else {
-                // Captura de errores
-                console.error("Error al registrar la información. Estado:", response.status, response.statusText);
+                console.error("Error al registrar la información:", response.statusText);
                 return null;
             }
         } else {
@@ -136,7 +124,7 @@ const extraInfo = async (epc: string, antena: string) => {
     }
 };
 
-const ProductDetail: React.FC = () => {
+const Cortina3: React.FC = () => {
     const [productos, setProductos] = useState<Producto[]>([]); // Lista de productos
 
     useEffect(() => {
@@ -148,46 +136,48 @@ const ProductDetail: React.FC = () => {
         connection.start()
             .then(() => {
                 console.log("Conectado");
-                connection.invoke("JoinGroup", "EntradaPT")
-                    .then(() => console.log("Unido al grupo EntradaPT"))
+                // Unirse al grupo "Embarque-Carril-1"
+                connection.invoke("JoinGroup", "Embarque-Carril-3")
+                    .then(() => console.log("Unido al grupo Embarque-Carril-3"))
                     .catch(err => console.error("Error al unirse al grupo:", err));
             })
             .catch((err) => console.error("Error de conexión:", err));
     
         connection.on("sendEpc", (message) => {
             console.log("Mensaje recibido:", message);
-            subject.next(message);  // Asegúrate de que el formato de mensaje es correcto
+            subject.next(message);
         });
     
         const processMessage = (message: any) => {
-            if (message && message.epc) {  // Asegúrate de que coincida con las propiedades en minúsculas
-                const { antennaPort, epc, rssi, firstSeenTime, lastSeenTime, readerIP } = message;
-                const epcSinEspacios = epc.replace(/\s+/g, '');
-        
-                console.log("Antena:", antennaPort);
-                console.log("EPC:", epcSinEspacios);
-                console.log("RSSI:", rssi);
-                console.log("First Seen:", firstSeenTime);
-                console.log("Last Seen:", lastSeenTime);
-                console.log("Reader IP:", readerIP);
-        
-                // Procesar los datos según lo necesites
-                loadData(epcSinEspacios, setProductos);
-                updateStatus(epcSinEspacios, 2); // Cambia el estado de EPC
-                extraInfo(epcSinEspacios, antennaPort); // Registra la información adicional
-            } else {
-                console.warn("Formato de mensaje incorrecto o faltan datos:", message);
-            }
+            // Accede directamente a las propiedades del objeto recibido desde el backend
+            const antena = message.AntennaPort;
+            const epc = message.EPC;
+            const rssi = message.RSSI;
+            const firstSeenTime = message.FirstSeenTime;
+            const lastSeenTime = message.LastSeenTime;
+            const readerIP = message.ReaderIP;
+    
+            console.log("Antena:", antena);
+            console.log("EPC:", epc);
+            console.log("RSSI:", rssi);
+            console.log("First Seen:", firstSeenTime);
+            console.log("Last Seen:", lastSeenTime);
+            console.log("Reader IP:", readerIP);
+    
+            // Procesar los datos según lo necesites
+            loadData(epc, setProductos);
+            updateStatus(epc, 2); // Cambia el estado de EPC
+            extraInfo(epc, antena); // Registra la información adicional
         };
-        
     
         const subscription = subject.subscribe(processMessage);
     
+        // Cuando el componente se desmonte, se debe salir del grupo
         return () => {
             if (connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("LeaveGroup", "EntradaPT")
+                connection.invoke("LeaveGroup", "Embarque-Carril-3")
                     .then(() => {
-                        console.log("Desconectado del grupo EntradaPT");
+                        console.log("Desconectado del grupo Embarque-Carril-3");
                         return connection.stop();
                     })
                     .catch(err => console.error("Error al salir del grupo:", err));
@@ -197,15 +187,13 @@ const ProductDetail: React.FC = () => {
     
             subscription.unsubscribe();
         };
-    }, [setProductos]);
-    
-    
+    }, []);
 
     return (
         <div className="outer-container">
             <div className="product-list-container">
                 <div className="entry-title">
-                    <h2>Entradas</h2>
+                    <h2>Salidas Cortina 3</h2> {/* Cambiado para Salida */}
                 </div>
                 {productos.map((producto, index) => (
                     <div className="entry-product" key={index}>
@@ -245,7 +233,7 @@ const ProductDetail: React.FC = () => {
                                 <p><strong>Peso Tarima:</strong> <span>{productos[0].pesoTarima}</span></p>
                             </div>
                             <div className="">
-                                <p><strong>Fecha de Entrada:</strong> <span>{productos[0].fechaEntrada}</span></p>
+                                <p><strong>Fecha de Salida:</strong> <span>{productos[0].fechaSalida}</span></p> {/* Cambiado a Salida */}
                                 <p><strong>Unidad de Medida:</strong> <span>{productos[0].uom}</span></p>
                             </div>
                             <p><strong>PrintCard:</strong> <span>{productos[0].productPrintCard}</span></p>
@@ -257,4 +245,4 @@ const ProductDetail: React.FC = () => {
     );
 };
 
-export default ProductDetail;
+export default Cortina3;
