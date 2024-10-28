@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './productdetail.scss';
+import './embarque-1.scss';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
 

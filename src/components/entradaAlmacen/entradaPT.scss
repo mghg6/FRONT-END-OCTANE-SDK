@@ -1,0 +1,259 @@
+$primary-color: #46707e;   // Define el color primario
+$secondary-color: #ffffff; // Define el color secundario
+$light-gray: #f5f5f5;      // Define el gris claro
+$dark-gray: #333333;       // Define el gris oscuro
+$box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); // Define el sombreado
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap'); /* Fuente moderna */
+
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 2rem;
+  background-color: $secondary-color;
+  border-radius: 10px;
+  box-shadow: $box-shadow;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 10px;
+  border-bottom: 1px solid $primary-color;
+}
+
+.main-content {
+  display: flex;  /* Flexbox para colocar la imagen y detalles lado a lado */
+  justify-content: space-between;  /* Añade espacio entre la imagen y los detalles */
+  align-items: flex-start;  /* Alinea los elementos al inicio del contenedor */
+  gap: 20px;  /* Espacio entre la imagen y los detalles */
+  width: 100%;  /* Asegura que ocupe todo el ancho del contenedor */
+  margin-top: auto;
+}
+
+.titulo-details {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;  /* Reduce significativamente el margen inferior */
+  padding: 0;
+
+  h1 {
+    font-size: 40px;
+    font-weight: bold;
+    color: black;
+    margin: 0;  /* Elimina márgenes */
+    padding: 0;
+    line-height: 1.2;
+  }
+}
+
+
+  
+
+  .nombre-almacen {
+    font-size: 44px;
+    font-weight: bold;
+  }
+
+  .fecha {
+    font-size: 44px;
+    font-weight: bold;
+    color: $primary-color;
+  }
+  .product-image {
+    flex: 0 0 300px;  /* La imagen ocupa un ancho fijo de 300px */
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start;
+    align-items: flex-start;
+  
+    img {
+      width: 100%;  /* La imagen ocupará siempre el tamaño definido por el contenedor (300px en este caso) */
+      height: 300px;  /* Altura fija */
+      object-fit: cover;  /* Esto asegura que la imagen mantenga proporciones */
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      border: 3px solid $primary-color;
+    }
+  
+    .status-checks {
+      margin-top: 10px;   /* Reduce el margen superior para acercar los status a la imagen */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: $box-shadow;
+      text-align: left;  /* Alinea el texto a la izquierda */
+      width: 100%;       /* Asegura que los status ocupen todo el ancho del contenedor */
+  
+      p {
+        font-size: 18px;
+        color: $dark-gray;
+        strong {
+          font-size: 20px;
+        }
+      }
+  
+      .ok {
+        color: green;
+      }
+  
+      .error {
+        color: red;
+      }
+    }
+  }
+  
+  .product-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+
+    .detail-field {
+        display: flex;
+        flex-direction: column;
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .input-with-icon {
+            position: relative;  // Necesario para que el ícono se alinee con el input
+            
+            input {
+                width: 100%;
+                padding-left: 40px;  // Deja espacio para el ícono
+                padding-right: 10px;
+                font-size: 24px;
+                font-weight: bold;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                height: 40px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            svg {
+                position: absolute;
+                top: 50%;
+                left: 10px;
+                transform: translateY(-50%);
+                color: #46707e;  // Ajusta el color del ícono según prefieras
+                font-size: 20px;
+            }
+        }
+    }
+}
+
+
+// Estilos generales
+.outer-container {
+  display: flex;
+  flex-direction: row;
+  width: 95%; // Ajustado para ocupar el 95% del ancho de la pantalla
+  height: 95vh; // Ajustado para ocupar el 95% del alto de la pantalla
+  margin: 20px auto;
+  gap: 20px;
+  box-sizing: border-box; // Asegura que el padding se incluya dentro del tamaño
+}
+
+.product-list-contenedor {
+  width: 25%; /* Ocupa el 25% del ancho de la pantalla */
+  padding: 1rem;
+  background-color: $primary-color;
+  border-radius: 10px;
+  box-shadow: $box-shadow;
+  overflow-y: auto;
+  margin-right: 1rem;
+}
+
+
+.detail-row {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap; // Para mejor adaptación en pantallas pequeñas
+}
+
+.entry-title {
+  background-color: $primary-color;
+  color: $secondary-color;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap'); // Importa Google Fonts
+.entry-producto.error {
+  background-color: #ffcccc;
+  border-left: 4px solid red;
+}
+.entry-producto {
+  font-family: 'Poppins', sans-serif; /* Fuente moderna */
+  border: none;
+  padding: 20px;
+  margin: 15px 0;
+  background: linear-gradient(145deg, #ffffff, #f1f1f1); /* Gradiente suave */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra más destacada */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Animación para hover */
+
+  &:hover {
+    transform: translateY(-5px); /* Efecto de levitación en hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Sombra más profunda al hacer hover */
+  }
+
+  p {
+    margin: 8px 0;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333; /* Texto oscuro */
+  }
+
+  span {
+    color: black; /* Color para los datos, en tu color principal */
+    font-weight: 600;
+  }
+
+  strong {
+    font-size: 18px; /* Tamaño más grande para resaltar */
+    color: #333;
+    font-weight: bold;
+  }
+
+  /* Cambia el estilo de los textos específicos */
+  p strong {
+    font-weight: bold;
+    color: #46707e; /* Color del texto */
+  }
+}
+
+
+.entry-image img {
+  width: 75%;
+  height: auto;
+  object-fit: contain; /* O "cover" dependiendo del ajuste que prefieras */
+}
+
+
+
+.main-content {
+  display: flex;
+  gap: 20px;
+  width: 100%;  /* Ajusta para que ocupe todo el espacio */
+  align-items: flex-start;  /* Alinea el contenido al inicio del contenedor */
+  padding-top: 0;  /* Asegúrate de que no haya padding superior */
+  margin-top: 0;  /* Elimina cualquier margen superior */
+  position: relative;  /* Permite el ajuste fino con `top` si es necesario */
+  flex-wrap: wrap;
+  margin-bottom: auto;
+}
+

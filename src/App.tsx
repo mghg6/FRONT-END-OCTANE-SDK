@@ -2,11 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.scss'; // Ajuste de importación para TSX, sin extensión
 import { Dashboard } from './components/dashboard/Dashboard';
-import ProductDetail from './components/entradaAlmacen/ProductDetail';
+import ProductDetail from './components/entradaAlmacen/entradaAlmacen';
 import SalidaMP from './components/salidaAlmacen/SalidaMP'; 
 import Cortina1 from './components/embarque1/Cortina1';
 import Cortina2 from './components/embarque2/Cortina2';
 import Cortina3 from './components/embarque3/Cortina3';
+import ErrorScreen from './components/errors/errorScreen';
 
 
 // Definir los componentes funcionales con TypeScript
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <Route path="/embarque-1" element={<Cortina1 />} />
           <Route path="/embarque-2" element={<Cortina2 />} />
           <Route path="/embarque-3" element={<Cortina3 />} />
+          <Route path="/error-screen" element={<ErrorScreen message="Error en la antena, favor de reiniciar la lectura" />} />
         </Routes>
       </div>
     </Router>
