@@ -89,6 +89,7 @@ const ProductDetail: React.FC = () => {
                 loadData(tarima.epc, setProductos);
                 updateStatus(tarima.epc, 2);
                 extraInfo(tarima.epc);
+                registroAntenas(tarima.epc, "000000000134");
                 if (tarima.OperadorInfo && tarima.OperadorInfo.rfiD_Operador) {
                     fetchOperadorInfo(tarima.OperadorInfo.rfiD_Operador);
                     console.log(`Operador detectado: ${tarima.OperadorInfo.nombreOperador}`);
@@ -263,6 +264,7 @@ const loadData = async (epc: string, setProductos: React.Dispatch<React.SetState
     }
 };
 
+//Registro en tabla ProdExtraInfo
 const extraInfo = async (epc: string) => {
     try {
         const response = await fetch(`http://172.16.10.31/api/ProdExtraInfo/EntradaAlmacen/${epc}`, {
@@ -345,7 +347,26 @@ const extraInfo = async (epc: string) => {
     }
 };
 
+//.....
+//Registro en tabla RegistroAntenas
+const registroAntenas = async (epc: string, epcOperador: string) => {
+    try {
+        const response = await fetch(`http://172.16.10.31/api/ProdRegistroAntenas?epcOperador=${epcOperador}&epc=${epc}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}) // El cuerpo está vacío según lo que has mencionado
+        });
 
+        
+    } catch (error) {
+        console.error("Error al registrar:", error);
+    
+    }
+};
+
+//.....
 
 const formatFecha = () => {
     const fechaActual = new Date();
