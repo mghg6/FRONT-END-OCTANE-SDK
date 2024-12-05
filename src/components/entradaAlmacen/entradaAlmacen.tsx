@@ -65,40 +65,60 @@ const ProductDetail: React.FC = () => {
          return date.toLocaleTimeString('es-ES', { hour12: true }); // Formato de hora español (24 horas o 12 horas)
      };
 
-    useEffect(() => {
+     useEffect(() => {
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://172.16.10.31:86/message")
+            .withUrl("https://localhost:7202/message")
             .configureLogging(signalR.LogLevel.Information)
             .build();
-
+    
         connection.start()
             .then(() => {
                 console.log("Conectado");
-                connection.invoke("JoinGroup", "EntradaPT")
-                    .then(() => console.log("Unido al grupo EntradaPT"))
-                    .catch(err => console.error("Error al unirse al grupo:", err));
             })
             .catch((err) => {
                 console.error("Error de conexión:", err);
-                // Swal.fire('Error', 'Conexión a SignalR fallida', 'error');
             });
+    
+        connection.on("sendMessage", (message: any) => {
+            if (message && message.Type === "Asociación") {
 
-        connection.on("sendEpc", (tarima: any) => {
-            if (tarima && tarima.epc) {
-                console.log(`Tarima recibida con EPC: ${tarima.epc}`);
-                loadData(tarima.epc, setProductos);
-                updateStatus(tarima.epc, 2);
-                extraInfo(tarima.epc);
-                registroAntenas(tarima.epc, "000000000134");
-                if (tarima.OperadorInfo && tarima.OperadorInfo.rfiD_Operador) {
-                    fetchOperadorInfo(tarima.OperadorInfo.rfiD_Operador);
-                    console.log(`Operador detectado: ${tarima.OperadorInfo.nombreOperador}`);
+                console.log(`Asociación recibida: Tarima ${message.Tarima}, Operador ${message.Operador}`);
+    
+                // Lógica para manejar la tarima
+                loadData(message.Tarima, setProductos);
+                updateStatus(message.Tarima, 2);
+                extraInfo(message.Tarima);
+                registroAntenas(message.Tarima, message.Operador);
+    
+                // Lógica para manejar el operador
+                if (message.Operador) {
+                    fetchOperadorInfo(message.Operador);
+                    console.log(`Operador detectado: ${message.Operador}`);
                 } else {
                     setNombreOperador("Sin operador asociado");
                     console.log("Sin operador asociado");
                 }
+            } else if (message) {
+                // Procesar mensaje sin datos de asociación
+                const tarimaEpc = message.tarima || "Desconocido";
+                const operadorEpc = message.operador || "Desconocido";
+    
+                console.log(`Mensaje recibido sin datos de asociación: Tarima ${tarimaEpc}, Operador ${operadorEpc}`);
+    
+                // Opcional: Actualiza el estado o realiza acciones específicas con los EPCs
+                loadData(tarimaEpc, setProductos);
+                registroAntenas(tarimaEpc, operadorEpc);
+    
+                if (operadorEpc !== "Desconocido") {
+                    fetchOperadorInfo(operadorEpc);
+                } else {
+                    setNombreOperador("Operador no especificado");
+                }
+            } else {
+                console.log("Mensaje vacío o formato no reconocido:", message);
             }
         });
+    
 
         return () => {
             if (connection.state === signalR.HubConnectionState.Connected) {
@@ -111,14 +131,7 @@ const ProductDetail: React.FC = () => {
         };
     }, []);
 
-    // // Actualizar el producto más reciente automáticamente si no hay uno seleccionado manualmente
-    // useEffect(() => {
-    //     if (productos.length > 0 && !productoSeleccionado) {
-    //         const ultimoProducto = productos[0]; // El más reciente es el primer producto en el arreglo
-    //         setProductoSeleccionado(ultimoProducto);
-    //         console.log("Producto seleccionado automáticamente:", ultimoProducto);
-    //     }
-    // }, [productos, productoSeleccionado]);
+    
     
 
     //FUNCION PARA SACAR AL OPERADOR
