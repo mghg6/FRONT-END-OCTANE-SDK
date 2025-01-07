@@ -9,6 +9,7 @@ import { faBox, faWeight, faCubes, faRuler, faTag } from '@fortawesome/free-soli
 
 // Definimos los tipos para Producto
 interface Producto {
+    tipoEtiqueta?: string;
     id?: number;
     urlImagen: string;
     fecha: string;
@@ -42,7 +43,7 @@ interface OperadorInfo {
     rfiD_Operador: string;
 }
 
-const SalidaMP: React.FC = () => {
+const ProductDetail: React.FC = () => {
     const [productos, setProductos] = useState<Producto[]>([]);
     const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
     const [nombreOperador, setNombreOperador] = useState<string>("Sin operador asociado");
@@ -65,44 +66,66 @@ const SalidaMP: React.FC = () => {
          return date.toLocaleTimeString('es-ES', { hour12: true }); // Formato de hora español (24 horas o 12 horas)
      };
 
-    useEffect(() => {
+     useEffect(() => {
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://172.16.10.31:86/message")
+            .withUrl("http://172.16.10.31:92/message")
             .configureLogging(signalR.LogLevel.Information)
             .build();
-
+    
         connection.start()
             .then(() => {
                 console.log("Conectado");
-                connection.invoke("JoinGroup", "EntradaMP")
-                    .then(() => console.log("Unido al grupo EntradaMP"))
-                    .catch(err => console.error("Error al unirse al grupo:", err));
             })
             .catch((err) => {
                 console.error("Error de conexión:", err);
-                // Swal.fire('Error', 'Conexión a SignalR fallida', 'error');
             });
+    
+        connection.on("sendMessage", (message: any) => {
+            if (message && message.Type === "Asociación") {
 
-        connection.on("sendEpc", (tarima: any) => {
-            if (tarima && tarima.epc) {
-                console.log(`Tarima recibida con EPC: ${tarima.epc}`);
-                loadData(tarima.epc, setProductos);
-                updateStatus(tarima.epc, 8);
-                extraInfo(tarima.epc);
-                registroAntenas(tarima.epc, "000000000134");
-                if (tarima.OperadorInfo && tarima.OperadorInfo.rfiD_Operador) {
-                    fetchOperadorInfo(tarima.OperadorInfo.rfiD_Operador);
-                    console.log(`Operador detectado: ${tarima.OperadorInfo.nombreOperador}`);
+                console.log(`Asociación recibida: Tarima ${message.Tarima}, Operador ${message.Operador}`);
+    
+                // Lógica para manejar la tarima
+                loadData(message.Tarima, setProductos);
+                updateStatus(message.Tarima, 8);
+                extraInfo(message.Tarima);
+                registroAntenas(message.Tarima, message.Operador);
+    
+                // Lógica para manejar el operador
+                if (message.Operador) {
+                    fetchOperadorInfo(message.Operador);
+                    console.log(`Operador detectado: ${message.Operador}`);
                 } else {
                     setNombreOperador("Sin operador asociado");
                     console.log("Sin operador asociado");
                 }
+            } else if (message) {
+                // Procesar mensaje sin datos de asociación
+                const tarimaEpc = message.tarima;
+                const operadorEpc = message.operador;
+    
+                console.log(`Mensaje recibido sin datos de asociación: Tarima ${tarimaEpc}, Operador ${operadorEpc}`);
+    
+                // Opcional: Actualiza el estado o realiza acciones específicas con los EPCs
+                loadData(tarimaEpc, setProductos);
+                updateStatus(tarimaEpc, 8);
+                extraInfo(tarimaEpc);
+                registroAntenas(tarimaEpc, operadorEpc);
+                
+                if (operadorEpc !== "Desconocido") {
+                    fetchOperadorInfo(operadorEpc);
+                } else {
+                    setNombreOperador("Operador no especificado");
+                }
+            } else {
+                console.log("Mensaje vacío o formato no reconocido:", message);
             }
         });
+    
 
         return () => {
             if (connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("LeaveGroup", "EntradaMP")
+                connection.invoke("LeaveGroup", "EntradaPT")
                     .then(() => connection.stop())
                     .catch(err => console.error("Error al salir del grupo:", err));
             } else {
@@ -111,14 +134,7 @@ const SalidaMP: React.FC = () => {
         };
     }, []);
 
-    // // Actualizar el producto más reciente automáticamente si no hay uno seleccionado manualmente
-    // useEffect(() => {
-    //     if (productos.length > 0 && !productoSeleccionado) {
-    //         const ultimoProducto = productos[0]; // El más reciente es el primer producto en el arreglo
-    //         setProductoSeleccionado(ultimoProducto);
-    //         console.log("Producto seleccionado automáticamente:", ultimoProducto);
-    //     }
-    // }, [productos, productoSeleccionado]);
+    
     
 
     //FUNCION PARA SACAR AL OPERADOR
@@ -191,11 +207,15 @@ const updateStatus = async (epc: string, newStatus: number) => {
 const fetchData = async (epc: string): Promise<Producto | null> => {
     try {
         const response = await fetch(`http://172.16.10.31/api/socket/${epc}`);
+        
         if (!response.ok) {
             throw new Error('Error al obtener los datos');
         }
+
         const data = await response.json();
+        console.log("Datos obtenidos del websocket:", data);
         return data as Producto;
+       
     } catch (error) {
         console.error("Error al realizar la petición:", error);
         return null;
@@ -206,6 +226,9 @@ const fetchData = async (epc: string): Promise<Producto | null> => {
 const loadData = async (epc: string, setProductos: React.Dispatch<React.SetStateAction<Producto[]>>) => {
     try {
         const data = await fetchData(epc);
+
+        console.log("LoadData:", data);
+        
         if (data) {
             const horaActual = new Date().toLocaleTimeString();  // Obtener la hora actual correctamente
             
@@ -267,7 +290,7 @@ const loadData = async (epc: string, setProductos: React.Dispatch<React.SetState
 //Registro en tabla ProdExtraInfo
 const extraInfo = async (epc: string) => {
     try {
-        const response = await fetch(`http://172.16.10.31/api/ProdExtraInfo/EntradaAlmacen/${epc}`, {
+        const response = await fetch(`http://172.16.10.31/api/ProdExtraInfo/SalidaAlmacen/${epc}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -506,4 +529,4 @@ const formatFecha = () => {
 };
 
 
-export default SalidaMP;
+export default ProductDetail;

@@ -9,6 +9,7 @@ import { faBox, faWeight, faCubes, faRuler, faTag } from '@fortawesome/free-soli
 
 // Definimos los tipos para Producto
 interface Producto {
+    tipoEtiqueta?: string;
     id?: number;
     urlImagen: string;
     fecha: string;
@@ -52,6 +53,7 @@ const ProductDetail: React.FC = () => {
     const [currentTime, setCurrentTime] = useState(new Date());
     const [cantidadProductos, setCantidadProductos] = useState(0);
     // const metaDiaria = 100; // Meta diaria de productos procesados
+    const [operadores, setOperadores] = useState<string[]>([]);
 
      useEffect(() => {
          const timer = setInterval(() => {
@@ -66,8 +68,12 @@ const ProductDetail: React.FC = () => {
      };
 
      useEffect(() => {
+        fetchOperadores();
+    }, []);
+    
+     useEffect(() => {
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7202/message")
+            .withUrl("http://172.16.10.31:81/message")
             .configureLogging(signalR.LogLevel.Information)
             .build();
     
@@ -100,15 +106,17 @@ const ProductDetail: React.FC = () => {
                 }
             } else if (message) {
                 // Procesar mensaje sin datos de asociación
-                const tarimaEpc = message.tarima || "Desconocido";
-                const operadorEpc = message.operador || "Desconocido";
+                const tarimaEpc = message.tarima;
+                const operadorEpc = message.operador;
     
                 console.log(`Mensaje recibido sin datos de asociación: Tarima ${tarimaEpc}, Operador ${operadorEpc}`);
     
                 // Opcional: Actualiza el estado o realiza acciones específicas con los EPCs
                 loadData(tarimaEpc, setProductos);
+                updateStatus(tarimaEpc, 2);
+                extraInfo(tarimaEpc);
                 registroAntenas(tarimaEpc, operadorEpc);
-    
+                
                 if (operadorEpc !== "Desconocido") {
                     fetchOperadorInfo(operadorEpc);
                 } else {
@@ -131,9 +139,21 @@ const ProductDetail: React.FC = () => {
         };
     }, []);
 
+    const fetchOperadores = async () => {
+        try {
+            const response = await fetch('http://172.16.10.31/api/OperadoresRFID');
+            if (response.ok) {
+                const data = await response.json();
+                const nombresOperadores = data.map((operador: OperadorInfo) => operador.nombreOperador);
+                setOperadores(nombresOperadores);
+            } else {
+                console.error('Error al obtener los operadores');
+            }
+        } catch (error) {
+            console.error('Error al obtener los operadores:', error);
+        }
+    };
     
-    
-
     //FUNCION PARA SACAR AL OPERADOR
     // Función para obtener datos del operador
     const fetchOperadorInfo = async (epcOperador: string) => {
@@ -204,11 +224,15 @@ const updateStatus = async (epc: string, newStatus: number) => {
 const fetchData = async (epc: string): Promise<Producto | null> => {
     try {
         const response = await fetch(`http://172.16.10.31/api/socket/${epc}`);
+        
         if (!response.ok) {
             throw new Error('Error al obtener los datos');
         }
+
         const data = await response.json();
+        console.log("Datos obtenidos del websocket:", data);
         return data as Producto;
+       
     } catch (error) {
         console.error("Error al realizar la petición:", error);
         return null;
@@ -219,6 +243,9 @@ const fetchData = async (epc: string): Promise<Producto | null> => {
 const loadData = async (epc: string, setProductos: React.Dispatch<React.SetStateAction<Producto[]>>) => {
     try {
         const data = await fetchData(epc);
+
+        console.log("LoadData:", data);
+        
         if (data) {
             const horaActual = new Date().toLocaleTimeString();  // Obtener la hora actual correctamente
             
@@ -499,13 +526,35 @@ const formatFecha = () => {
                     <input type="text" value={productoSeleccionado.productPrintCard} readOnly />
                 </div>
             </div>
-            <div className="detail-field">
-                <label>OPERADOR</label>
-                <div className="input-with-icon">
-                    <FontAwesomeIcon icon={faTag} />
-                    <input type="text" value={nombreOperador}  readOnly />
-                </div>
-            </div>
+                {nombreOperador === "Operador no encontrado" ? (
+                    <div className="detail-field">
+                        <label>OPERADOR</label>
+                        <div className="input-with-icon">
+                            <FontAwesomeIcon icon={faTag} />
+                            <select
+                                onChange={(e) => setNombreOperador(e.target.value)} // Actualiza el nombre del operador
+                                value={nombreOperador}
+                            >
+                                <option value="" disabled>Selecciona un operador</option>
+                                {operadores.map((operador, index) => (
+                                    <option key={index} value={operador}>{operador}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="detail-field">
+                        <label>OPERADOR</label>
+                        <div className="input-with-icon">
+                            <FontAwesomeIcon icon={faTag} />
+                            <input type="text" value={nombreOperador} readOnly />
+                        </div>
+                    </div>
+                )}
+
+
+
+
             </div>
       </div>
       
