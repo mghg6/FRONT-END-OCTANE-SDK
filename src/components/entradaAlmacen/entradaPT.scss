@@ -148,6 +148,38 @@ $box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); // Define el sombreado
             }
         }
     }
+
+    .input-with-icon select {
+      width: 100%;
+      padding-left: 40px;  // Deja espacio para el ícono
+      padding-right: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      height: 40px;
+      background-color: #fff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      appearance: none;  /* Elimina el estilo predeterminado de los navegadores */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      cursor: pointer;
+      outline: none;  /* Elimina el borde de enfoque del select */
+    }
+
+    .input-with-icon svg {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      color: $primary-color;
+      font-size: 20px;
+    }
+
+    .input-with-icon select:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 5px rgba(70, 112, 126, 0.5);  /* Sombra al enfocar */
+    }
 }
 
 
